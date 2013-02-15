@@ -1,4 +1,4 @@
-Display objects from a LabelMe database.
+Displays objects from a LabelMe database.
 
 If you don't have a dataset, run the main method from labelmeretriever.
 
