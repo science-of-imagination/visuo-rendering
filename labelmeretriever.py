@@ -27,10 +27,10 @@ def parse(website):
 
 def main(number=-1,filtering=True,randomized=False):
     data_directory = "data"
-    os.makedirs(data_directory)
-    
+    #os.makedirs(data_directory)
+
     website = "http://labelme.csail.mit.edu/Annotations"
-    
+
     parsed = parse(website)
     folders = []
     for a in parsed.findAll('a'):
@@ -39,10 +39,11 @@ def main(number=-1,filtering=True,randomized=False):
             if match == None:
                 folders.append(a.contents[0])
     folders = folders[5:]
+    print len(folders)
     if number == -1:
         pass
     elif randomized:
-        folders = [folders.pop(random.randint(0,len(folders)-1)) for index in xrange(number)]         
+        folders = [folders.pop(random.randint(0,len(folders)-1)) for index in xrange(number)]
     else:
         folders = folders[0:number]
     for folder in folders:
@@ -50,13 +51,13 @@ def main(number=-1,filtering=True,randomized=False):
         parsed = parse(website)
         for a in parsed.findAll('a'):
           if a.contents[0][-3:] == "xml":
-              urllib.urlretrieve(website+a.contents[0], os.path.join(data_directory,a.contents[0]))
+              urllib.urlretrieve(website+a.contents[0], os.path.join(data_directory,folder[:-1]+"---"+a.contents[0]))
     for folder in folders:
         website = "http://labelme.csail.mit.edu/Images/"+folder
         parsed = parse(website)
         for a in parsed.findAll('a'):
           if a.contents[0][-3:] == "jpg":
-              urllib.urlretrieve(website+a.contents[0], os.path.join(data_directory,a.contents[0]))
+              urllib.urlretrieve(website+a.contents[0], os.path.join(data_directory,folder[:-1]+"---"+a.contents[0]))
 
-    
-    
+
+
