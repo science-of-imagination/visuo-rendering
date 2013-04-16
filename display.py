@@ -1,7 +1,7 @@
 '''
 Created on 2010-12-09
 
-Displays objects from a LabelMe database.
+Display objects from a LabelMe database.
 
 If you don't have a dataset, run the main method from labelmeretriever.
 
@@ -52,8 +52,10 @@ grabcut_iterations = 5
 white = (255,255,255)
 black = (0,0,0)
 
-width = 1600
-height = 900
+width = 1300
+height = 700
+
+large_threshold = 500
 
 to_display = pygame.sprite.OrderedUpdates()
 current_picture = [None]
@@ -85,7 +87,9 @@ class Imagined(pygame.sprite.Sprite):
         self.box = box
         self.offset_pixels(pixels)
         self.image_coloring()
+        self.resize()
         self.rect.center = self.find_position(position)
+        self.put_inside_frame()
 
     def find_position(self,position):
         """ Assign a position to the object according to given values between 0 and 1, proportionally to the resolution """
@@ -106,6 +110,27 @@ class Imagined(pygame.sprite.Sprite):
         for c_and_p in colors_and_pixels:
             imagepixels[c_and_p[1][0]][c_and_p[1][1]] = c_and_p[0]
             imagealpha[c_and_p[1][0]][c_and_p[1][1]] = 255
+
+    def resize(self):
+        """ Scales down images larger than a threshold """
+        image_width = self.rect.right - self.rect.left
+        image_height = self.rect.bottom - self.rect.top
+
+        if image_width > large_threshold or image_height > large_threshold:
+            self.image = pygame.transform.scale(self.image, (image_width/2, image_height/2))
+
+        self.rect = self.image.get_rect()
+
+    def put_inside_frame(self):
+        """ Moves the image inside the frame """
+        if self.rect.top < 0:
+            self.rect.top = 0
+        if self.rect.left < 0:
+            self.rect.left = 0
+        if self.rect.right > width:
+            self.rect.right = width
+        if self.rect.bottom > height:
+            self.rect.bottom = height
 
 def cut_out(thing):
     """ Withdraw an unwanted known object from a full picture  """
@@ -260,7 +285,16 @@ def cut_surface(surface,pixels):
     pixelsurface = pygame.surfarray.pixels3d(surface)
     pixelarray = numpy.array(pixelsurface)
 
-    colors = [pixelarray[pixel[0]][pixel[1]] for pixel in pixels]
+    colors = []
+    for pixel in pixels:
+        #print pixel
+        if len(pixel) > 1:
+            #print len(pixelarray), len(pixelarray[0])
+            if len(pixelarray) > pixel[0]:
+                if len(pixelarray[pixel[0]]) > pixel[1]:
+                    colors.append(pixelarray[pixel[0]][pixel[1]])
+
+    #colors = [pixelarray[pixel[0]][pixel[1]] for pixel in pixels]
 
     return colors
 
@@ -320,8 +354,8 @@ def find_position(angle, distance, main_position):
     y_distance = y_direction*y_factor*(distance/2.0)
     x_position = main_position[0]+x_distance
     y_position = main_position[1]+y_distance
-    #x_position = test_margins(x_position)
-    #y_position = test_margins(y_position)
+    x_position = test_margins(x_position)
+    y_position = test_margins(y_position)
 
     return [x_position,y_position]
 
@@ -371,8 +405,9 @@ def imagine(thing, position=(0.5,0.5), draw=True, grabcut=doingGrabcut):
         colors = cut_surface(image,pixels)
 
         imagined = Imagined(colors,pixels,box,position)
-
         to_display.add(imagined)
+
+        print thing
 
         if draw:
             draw_everything()
